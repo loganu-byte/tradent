@@ -1,0 +1,39 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Build output
+out/
+dist/
+dist-electron/
+
+# Electron packaging
+*.dmg
+*.exe
+*.AppImage
+*.deb
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Environment
+.env
+.env.local
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Resources (keep .gitkeep)
+resources/*
+!resources/.gitkeep
