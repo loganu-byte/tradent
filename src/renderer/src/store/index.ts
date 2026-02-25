@@ -8,7 +8,8 @@ import type {
   Agent,
   TelegramConfig,
   SecurityStatus,
-  TailscaleConfig
+  TailscaleConfig,
+  UpdateInfo
 } from '../types'
 
 interface AppState {
@@ -51,6 +52,10 @@ interface AppState {
 
   tailscaleConfig: TailscaleConfig | null
   setTailscaleConfig: (config: TailscaleConfig) => void
+
+  updateInfo: UpdateInfo | null
+  setUpdateInfo: (info: UpdateInfo) => void
+  dismissUpdate: () => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -98,5 +103,9 @@ export const useAppStore = create<AppState>((set) => ({
   setSecurityStatus: (securityStatus) => set({ securityStatus }),
 
   tailscaleConfig: null,
-  setTailscaleConfig: (tailscaleConfig) => set({ tailscaleConfig })
+  setTailscaleConfig: (tailscaleConfig) => set({ tailscaleConfig }),
+
+  updateInfo: null,
+  setUpdateInfo: (updateInfo) => set({ updateInfo }),
+  dismissUpdate: () => set({ updateInfo: null })
 }))

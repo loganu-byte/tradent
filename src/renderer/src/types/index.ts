@@ -193,6 +193,15 @@ export interface SecurityStatus {
   rendererIsolated: boolean
 }
 
+// --- Update types ---
+
+export interface UpdateInfo {
+  currentVersion: string
+  latestVersion: string
+  releaseUrl: string
+  releaseNotes: string
+}
+
 // --- IPC API surface ---
 
 export interface IElectronAPI {
@@ -261,4 +270,8 @@ export interface IElectronAPI {
   // Schedule
   addSchedule: (payload: { thread_id?: string; scheduled_at: string; message: string }) => Promise<{ id: number; success: boolean }>
   onScheduleFired: (cb: (payload: unknown) => void) => () => void
+
+  // Updates
+  onUpdateAvailable: (cb: (info: UpdateInfo) => void) => () => void
+  openReleaseUrl: (url: string) => Promise<void>
 }

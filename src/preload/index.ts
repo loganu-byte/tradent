@@ -86,7 +86,15 @@ const api = {
     const handler = (_: Electron.IpcRendererEvent, payload: unknown): void => callback(payload)
     ipcRenderer.on('schedule:fired', handler)
     return () => ipcRenderer.removeListener('schedule:fired', handler)
-  }
+  },
+
+  // Updates
+  onUpdateAvailable: (callback: (info: unknown) => void) => {
+    const handler = (_: Electron.IpcRendererEvent, info: unknown): void => callback(info)
+    ipcRenderer.on('update:available', handler)
+    return () => ipcRenderer.removeListener('update:available', handler)
+  },
+  openReleaseUrl: (url: string) => ipcRenderer.invoke('update:open-release', url)
 }
 
 contextBridge.exposeInMainWorld('api', api)

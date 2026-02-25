@@ -3,6 +3,7 @@ import { join } from 'path'
 import { registerIpcHandlers } from './ipc'
 import { initDatabase } from './db'
 import { startSchedulePoller } from './ipc/schedule'
+import { checkForUpdates } from './updater'
 
 // electron-vite outputs preload as .mjs when "type": "module" is set in package.json
 const preloadPath = join(__dirname, '../preload/index.mjs')
@@ -29,6 +30,7 @@ function createWindow(): void {
     if (!app.isPackaged) {
       mainWindow.webContents.openDevTools({ mode: 'detach' })
     }
+    checkForUpdates(mainWindow)
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
