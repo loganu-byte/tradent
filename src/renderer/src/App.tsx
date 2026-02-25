@@ -12,15 +12,28 @@ import { useTheme } from './hooks/useTheme'
 
 export default function App(): React.JSX.Element {
   const theme = useAppStore((s) => s.theme)
+  const setTheme = useAppStore((s) => s.setTheme)
+  const setSettings = useAppStore((s) => s.setSettings)
   const setAgentRunning = useAppStore((s) => s.setAgentRunning)
   const prependLog = useAppStore((s) => s.prependLog)
 
   useTheme(theme)
 
-  // Subscribe to real-time events from main process
+  // Load settings on startup — applies persisted theme and populates store
   useEffect(() => {
     if (!window.api) return
-    const unsubLog = window.api.onNewLog((log) => prependLog(log as Parameters<typeof prependLog>[0]))
+    window.api.getSettings().then((s) => {
+      setTheme(s.theme)
+      setSettings(s)
+    }).catch(console.error)
+  }, [setTheme, setSettings])
+
+  // Subscribe to real-time main-process events
+  useEffect(() => {
+    if (!window.api) return
+    const unsubLog = window.api.onNewLog((log) =>
+      prependLog(log as Parameters<typeof prependLog>[0])
+    )
     const unsubStatus = window.api.onAgentStatus((s) =>
       setAgentRunning((s as { isRunning: boolean }).isRunning)
     )

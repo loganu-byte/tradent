@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 const api = {
   // Logs
   getLogs: (limit?: number) => ipcRenderer.invoke('logs:get', limit),
+  clearLogs: () => ipcRenderer.invoke('logs:clear'),
   onNewLog: (callback: (log: unknown) => void) => {
     const handler = (_: Electron.IpcRendererEvent, log: unknown): void => callback(log)
     ipcRenderer.on('logs:new', handler)
@@ -29,8 +30,7 @@ const api = {
 
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
-  updateSettings: (settings: Record<string, unknown>) =>
-    ipcRenderer.invoke('settings:update', settings),
+  updateSettings: (payload: unknown) => ipcRenderer.invoke('settings:update', payload),
 
   // Agent
   startAgent: () => ipcRenderer.invoke('agent:start'),

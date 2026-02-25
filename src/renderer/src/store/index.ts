@@ -1,32 +1,26 @@
 import { create } from 'zustand'
-import type { Theme, LogEntry, Position, ChatMessage, AppSettings } from '../types'
+import type { Theme, LogEntry, Position, ChatMessage, SettingsResponse } from '../types'
 
 interface AppState {
-  // Theme
   theme: Theme
   setTheme: (theme: Theme) => void
 
-  // Logs
   logs: LogEntry[]
   setLogs: (logs: LogEntry[]) => void
   prependLog: (log: LogEntry) => void
 
-  // Positions
   positions: Position[]
   setPositions: (positions: Position[]) => void
 
-  // Chat
   chatMessages: ChatMessage[]
   setChatMessages: (messages: ChatMessage[]) => void
   addChatMessage: (message: ChatMessage) => void
 
-  // Agent
   agentRunning: boolean
   setAgentRunning: (running: boolean) => void
 
-  // Settings
-  settings: AppSettings | null
-  setSettings: (settings: AppSettings) => void
+  settings: SettingsResponse | null
+  setSettings: (settings: SettingsResponse) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -35,8 +29,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   logs: [],
   setLogs: (logs) => set({ logs }),
-  prependLog: (log) =>
-    set((state) => ({ logs: [log, ...state.logs].slice(0, 2000) })),
+  prependLog: (log) => set((state) => ({ logs: [log, ...state.logs].slice(0, 2000) })),
 
   positions: [],
   setPositions: (positions) => set({ positions }),

@@ -7,4 +7,9 @@ export function registerLogsHandlers(): void {
       .prepare('SELECT * FROM logs ORDER BY timestamp DESC LIMIT ?')
       .all(limit)
   })
+
+  ipcMain.handle('logs:clear', () => {
+    getDb().prepare('DELETE FROM logs').run()
+    return { success: true }
+  })
 }

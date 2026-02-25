@@ -1,12 +1,24 @@
 import { ipcMain } from 'electron'
 import { OandaClient } from '../agent/broker/oanda'
-import { secureStore } from '../store/settings'
+import { getOandaApiKey } from '../store/settings'
+import { getDb } from '../db'
+
+function getSQLiteVal(key: string): string | null {
+  const row = getDb()
+    .prepare('SELECT value FROM settings WHERE key = ?')
+    .get(key) as { value: string } | undefined
+  return row !== undefined ? JSON.parse(row.value) : null
+}
 
 function getOandaClient(): OandaClient {
-  const { accountId, apiKey, environment } = secureStore.get('oanda')
-  if (!accountId || !apiKey || !environment) {
+  const apiKey = getOandaApiKey()
+  const accountId = getSQLiteVal('oanda.accountId')
+  const environment = (getSQLiteVal('oanda.environment') ?? 'practice') as 'practice' | 'live'
+
+  if (!apiKey || !accountId) {
     throw new Error('OANDA is not configured. Set credentials in Settings.')
   }
+
   return new OandaClient({ accountId, apiKey, environment })
 }
 

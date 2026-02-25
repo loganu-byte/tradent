@@ -42,16 +42,36 @@ export interface AgentStatus {
   isRunning: boolean
 }
 
-export interface AppSettings {
+export interface SettingsResponse {
   theme: Theme
-  apiKeysMasked: Partial<Record<AIProvider, string | null>>
-  activeProvider?: AIProvider
-  activeModel?: string
+  oanda: {
+    accountId: string
+    environment: 'practice' | 'live'
+    hasApiKey: boolean
+  }
+  providers: {
+    gemini: boolean
+    openai: boolean
+    anthropic: boolean
+    openrouter: boolean
+  }
+  dailyLossLimit: number | null
 }
 
-// Matches window.api exposed by preload
+export interface SettingsUpdatePayload {
+  theme?: Theme
+  oanda?: {
+    accountId?: string
+    environment?: 'practice' | 'live'
+    apiKey?: string
+  }
+  apiKeys?: Partial<Record<AIProvider, string>>
+  dailyLossLimit?: number | null
+}
+
 export interface IElectronAPI {
   getLogs: (limit?: number) => Promise<LogEntry[]>
+  clearLogs: () => Promise<{ success: boolean }>
   onNewLog: (cb: (log: LogEntry) => void) => () => void
   getPositions: () => Promise<unknown>
   getTrades: () => Promise<unknown>
@@ -60,8 +80,8 @@ export interface IElectronAPI {
   sendMessage: (message: string) => Promise<ChatMessage>
   getChatHistory: () => Promise<ChatMessage[]>
   clearChat: () => Promise<{ success: boolean }>
-  getSettings: () => Promise<AppSettings>
-  updateSettings: (settings: Record<string, unknown>) => Promise<{ success: boolean }>
+  getSettings: () => Promise<SettingsResponse>
+  updateSettings: (payload: SettingsUpdatePayload) => Promise<{ success: boolean }>
   startAgent: () => Promise<{ success: boolean; reason?: string }>
   stopAgent: () => Promise<{ success: boolean }>
   getAgentStatus: () => Promise<AgentStatus>
