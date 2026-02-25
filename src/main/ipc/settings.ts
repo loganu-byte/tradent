@@ -1,11 +1,6 @@
 import { ipcMain } from 'electron'
 import { getDb } from '../db'
-import {
-  setApiKey,
-  hasApiKey,
-  setOandaApiKey,
-  hasOandaApiKey
-} from '../store/settings'
+import { setApiKeyWithTimestamp, hasApiKey } from '../store/settings'
 
 function getVal(key: string, fallback: unknown = null): unknown {
   const row = getDb()
@@ -20,22 +15,21 @@ function setVal(key: string, value: unknown): void {
     .run(key, JSON.stringify(value))
 }
 
+export { getVal, setVal }
+
 export function registerSettingsHandlers(): void {
   ipcMain.handle('settings:get', () => {
     return {
       theme: getVal('theme', 'dark'),
-      oanda: {
-        accountId: getVal('oanda.accountId', '') as string,
-        environment: getVal('oanda.environment', 'practice') as string,
-        hasApiKey: hasOandaApiKey()
-      },
       providers: {
         gemini: hasApiKey('gemini'),
         openai: hasApiKey('openai'),
         anthropic: hasApiKey('anthropic'),
         openrouter: hasApiKey('openrouter')
       },
-      dailyLossLimit: getVal('dailyLossLimit', null) as number | null
+      dailyLossLimit: getVal('dailyLossLimit', null) as number | null,
+      activeProvider: getVal('activeProvider', null) as string | null,
+      activeModel: getVal('activeModel', null) as string | null
     }
   })
 
@@ -45,24 +39,20 @@ export function registerSettingsHandlers(): void {
       _event,
       payload: {
         theme?: string
-        oanda?: { accountId?: string; environment?: string; apiKey?: string }
         apiKeys?: Record<string, string>
         dailyLossLimit?: number | null
+        activeProvider?: string | null
+        activeModel?: string | null
       }
     ) => {
       if (payload.theme != null) setVal('theme', payload.theme)
       if (payload.dailyLossLimit !== undefined) setVal('dailyLossLimit', payload.dailyLossLimit)
-
-      if (payload.oanda) {
-        const { accountId, environment, apiKey } = payload.oanda
-        if (accountId != null) setVal('oanda.accountId', accountId)
-        if (environment != null) setVal('oanda.environment', environment)
-        if (apiKey) setOandaApiKey(apiKey)
-      }
+      if (payload.activeProvider !== undefined) setVal('activeProvider', payload.activeProvider)
+      if (payload.activeModel !== undefined) setVal('activeModel', payload.activeModel)
 
       if (payload.apiKeys) {
         for (const [provider, key] of Object.entries(payload.apiKeys)) {
-          if (key) setApiKey(provider, key)
+          if (key) setApiKeyWithTimestamp(provider, key)
         }
       }
 

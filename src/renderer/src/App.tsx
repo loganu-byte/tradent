@@ -7,6 +7,9 @@ import { LiveLogs } from './components/logs/LiveLogs'
 import { OpenPositions } from './components/positions/OpenPositions'
 import { Chat } from './components/chat/Chat'
 import { Settings } from './components/settings/Settings'
+import { Agents } from './components/agents/Agents'
+import { Security } from './components/security/Security'
+import { Telegram } from './components/telegram/Telegram'
 import { useAppStore } from './store'
 import { useTheme } from './hooks/useTheme'
 
@@ -16,6 +19,9 @@ export default function App(): React.JSX.Element {
   const setSettings = useAppStore((s) => s.setSettings)
   const setAgentRunning = useAppStore((s) => s.setAgentRunning)
   const prependLog = useAppStore((s) => s.prependLog)
+  const setActiveProvider = useAppStore((s) => s.setActiveProvider)
+  const setActiveModel = useAppStore((s) => s.setActiveModel)
+  const setAgents = useAppStore((s) => s.setAgents)
 
   useTheme(theme)
 
@@ -25,8 +31,16 @@ export default function App(): React.JSX.Element {
     window.api.getSettings().then((s) => {
       setTheme(s.theme)
       setSettings(s)
+      setActiveProvider(s.activeProvider)
+      setActiveModel(s.activeModel)
     }).catch(console.error)
-  }, [setTheme, setSettings])
+  }, [setTheme, setSettings, setActiveProvider, setActiveModel])
+
+  // Load agents on startup so Dashboard checklist works immediately
+  useEffect(() => {
+    if (!window.api) return
+    window.api.listAgents().then(setAgents).catch(console.error)
+  }, [setAgents])
 
   // Subscribe to real-time main-process events
   useEffect(() => {
@@ -56,6 +70,9 @@ export default function App(): React.JSX.Element {
               <Route path="/logs" element={<LiveLogs />} />
               <Route path="/positions" element={<OpenPositions />} />
               <Route path="/chat" element={<Chat />} />
+              <Route path="/agents" element={<Agents />} />
+              <Route path="/security" element={<Security />} />
+              <Route path="/telegram" element={<Telegram />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>

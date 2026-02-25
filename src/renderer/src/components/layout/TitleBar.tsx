@@ -4,7 +4,7 @@ export function TitleBar(): React.JSX.Element {
   const agentRunning = useAppStore((s) => s.agentRunning)
 
   return (
-    <div className="drag h-9 flex items-center justify-between px-4 bg-neutral-900 border-b border-neutral-800 shrink-0">
+    <div className="drag titlebar-gradient h-9 flex items-center justify-between px-4 shrink-0">
       <span className="text-xs font-semibold tracking-widest text-neutral-400 uppercase">
         Tradent
       </span>

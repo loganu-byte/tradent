@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { registerIpcHandlers } from './ipc'
 import { initDatabase } from './db'
+import { startSchedulePoller } from './ipc/schedule'
 
 // electron-vite outputs preload as .mjs when "type": "module" is set in package.json
 const preloadPath = join(__dirname, '../preload/index.mjs')
@@ -45,6 +46,7 @@ function createWindow(): void {
 app.whenReady().then(async () => {
   initDatabase()
   registerIpcHandlers()
+  startSchedulePoller()
   createWindow()
 
   app.on('activate', () => {

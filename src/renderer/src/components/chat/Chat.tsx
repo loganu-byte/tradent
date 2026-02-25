@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Send, MessageSquarePlus } from 'lucide-react'
 import { useAppStore } from '../../store'
+import { parseCommand } from './commands'
 
 const SUGGESTED_PROMPTS = [
   'What is your current strategy?',
@@ -13,6 +14,8 @@ export function Chat(): React.JSX.Element {
   const messages = useAppStore((s) => s.chatMessages)
   const setChatMessages = useAppStore((s) => s.setChatMessages)
   const addChatMessage = useAppStore((s) => s.addChatMessage)
+  const setActiveProvider = useAppStore((s) => s.setActiveProvider)
+  const setActiveModel = useAppStore((s) => s.setActiveModel)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -20,11 +23,21 @@ export function Chat(): React.JSX.Element {
   useEffect(() => {
     if (!window.api) return
     window.api.getChatHistory().then(setChatMessages).catch(console.error)
-  }, [setChatMessages])
+    const unsubSchedule = window.api.onScheduleFired((payload) => {
+      const p = payload as { message: string; response: { content: string; timestamp: string } }
+      addChatMessage({ role: 'user', content: p.message, timestamp: new Date().toISOString() })
+      addChatMessage({ role: 'assistant', content: p.response.content, timestamp: p.response.timestamp })
+    })
+    return unsubSchedule
+  }, [setChatMessages, addChatMessage])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, sending])
+
+  const addAssistantMsg = (content: string): void => {
+    addChatMessage({ role: 'assistant', content, timestamp: new Date().toISOString() })
+  }
 
   const send = async (text?: string): Promise<void> => {
     const msg = (text ?? input).trim()
@@ -32,21 +45,96 @@ export function Chat(): React.JSX.Element {
 
     setInput('')
 
-    // Handle slash commands locally
-    if (msg === '/new') {
-      if (!window.api) return
-      await window.api.clearChat().catch(console.error)
-      setChatMessages([])
-      return
-    }
+    const cmd = parseCommand(msg)
+    if (cmd !== null) {
+      switch (cmd.kind) {
+        case 'new':
+          if (!window.api) return
+          await window.api.clearChat().catch(console.error)
+          setChatMessages([])
+          return
 
-    if (msg === '/compact') {
-      addChatMessage({
-        role: 'assistant',
-        content: 'Conversation compaction is not yet available.',
-        timestamp: new Date().toISOString()
-      })
-      return
+        case 'compact':
+          addAssistantMsg('Conversation compaction is not yet available.')
+          return
+
+        case 'memory': {
+          if (!window.api) return
+          const mem = await window.api.readPermanentMemory().catch(() => null)
+          if (!mem) { addAssistantMsg('Could not read permanent memory.'); return }
+          addAssistantMsg(
+            mem.content
+              ? `**Permanent Memory** (${mem.path})\n\n${mem.content}`
+              : `Permanent memory is empty. File: ${mem.path}`
+          )
+          return
+        }
+
+        case 'models': {
+          if (!window.api) return
+          addAssistantMsg('Fetching available models…')
+          const result = await window.api.listModels(cmd.provider).catch(() => null)
+          if (!result) { addAssistantMsg('Failed to fetch models.'); return }
+          const grouped: Record<string, string[]> = {}
+          for (const m of result.models) {
+            if (!grouped[m.provider]) grouped[m.provider] = []
+            grouped[m.provider].push(m.id)
+          }
+          const lines: string[] = []
+          for (const [provider, ids] of Object.entries(grouped)) {
+            lines.push(`**${provider}**`)
+            for (const id of ids) lines.push(`  • ${id}`)
+          }
+          const errLines = Object.entries(result.errors).map(
+            ([p, e]) => `⚠ ${p}: ${e}`
+          )
+          const content = lines.length
+            ? lines.join('\n') + (errLines.length ? '\n\n' + errLines.join('\n') : '')
+            : errLines.length
+              ? errLines.join('\n')
+              : 'No models available. Configure at least one AI provider in Settings.'
+          addAssistantMsg(content)
+          return
+        }
+
+        case 'model': {
+          if (!window.api) return
+          await window.api.setActiveModel(cmd.provider, cmd.model).catch(console.error)
+          setActiveProvider(cmd.provider)
+          setActiveModel(cmd.model)
+          addAssistantMsg(`Active model set to **${cmd.provider}/${cmd.model}**.`)
+          return
+        }
+
+        case 'schedule': {
+          if (!window.api) return
+          const result = await window.api
+            .addSchedule({ scheduled_at: cmd.time, message: cmd.message })
+            .catch(() => null)
+          if (!result) { addAssistantMsg('Failed to schedule message.'); return }
+          addAssistantMsg(`Scheduled message #${result.id} for ${cmd.time}.`)
+          return
+        }
+
+        case 'commands':
+          addAssistantMsg(
+            'Available commands:\n' +
+            '  /new — clear chat history\n' +
+            '  /compact — compact conversation (stub)\n' +
+            '  /memory — view permanent memory\n' +
+            '  /models [provider] — list available models\n' +
+            '  /model provider/model — set active model\n' +
+            '  /schedule ISO-TIME message — schedule a message\n' +
+            '  /commands — show this help'
+          )
+          return
+
+        case 'unknown':
+          addAssistantMsg(
+            `Unknown command: \`${cmd.raw}\`. Type /commands for a list of available commands.`
+          )
+          return
+      }
     }
 
     setSending(true)
@@ -80,7 +168,7 @@ export function Chat(): React.JSX.Element {
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800 shrink-0">
         <h1 className="text-sm font-semibold text-neutral-100">Chat</h1>
         <span className="text-xs text-neutral-700">
-          <kbd className="font-mono">/new</kbd> to clear history
+          <kbd className="font-mono">/commands</kbd> for help
         </span>
       </div>
 
@@ -114,7 +202,7 @@ export function Chat(): React.JSX.Element {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[72%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
+                  className={`max-w-[72%] px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
                       ? 'bg-emerald-500/20 text-emerald-50 rounded-br-sm'
                       : 'bg-neutral-800 text-neutral-200 rounded-bl-sm'

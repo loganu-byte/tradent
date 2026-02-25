@@ -9,7 +9,9 @@ export default {
         profit: '#10b981',
         loss: '#ef4444',
         neutral: {
-          950: '#0a0a0a'
+          800: '#1a2332',
+          900: '#161b22',
+          950: '#0d1117'
         }
       },
       fontFamily: {

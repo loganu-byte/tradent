@@ -17,12 +17,13 @@ export function Dashboard(): React.JSX.Element {
   const logs = useAppStore((s) => s.logs)
   const positions = useAppStore((s) => s.positions)
   const settings = useAppStore((s) => s.settings)
+  const agents = useAppStore((s) => s.agents)
 
-  const oandaConfigured = !!(settings?.oanda?.hasApiKey && settings?.oanda?.accountId)
   const providerConfigured = settings
     ? Object.values(settings.providers).some(Boolean)
     : false
-  const ready = oandaConfigured && providerConfigured
+  const hasAgents = agents.length > 0
+  const ready = providerConfigured && hasAgents
 
   const recentLogs = logs.slice(0, 5)
 
@@ -45,7 +46,7 @@ export function Dashboard(): React.JSX.Element {
           <button
             onClick={handleToggleAgent}
             disabled={!ready}
-            title={!ready ? 'Configure OANDA and an AI provider first' : undefined}
+            title={!ready ? 'Configure an AI provider and create an agent first' : undefined}
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
               agentRunning
                 ? 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
@@ -77,19 +78,14 @@ export function Dashboard(): React.JSX.Element {
             </div>
             <div className="space-y-2">
               <ChecklistItem
-                done={settings?.oanda?.hasApiKey ?? false}
-                label="OANDA API key"
-                linkTo="/settings"
-              />
-              <ChecklistItem
-                done={!!(settings?.oanda?.accountId)}
-                label="OANDA account ID"
-                linkTo="/settings"
-              />
-              <ChecklistItem
                 done={providerConfigured}
                 label="At least one AI provider key (Gemini, OpenAI, Anthropic, or OpenRouter)"
                 linkTo="/settings"
+              />
+              <ChecklistItem
+                done={hasAgents}
+                label="At least one agent created"
+                linkTo="/agents"
               />
             </div>
           </div>
@@ -136,7 +132,7 @@ function StatCard({
   dot?: boolean
 }): React.JSX.Element {
   return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
+    <div className="stat-card">
       <p className="text-xs text-neutral-500 mb-1">{label}</p>
       <div className="flex items-center gap-2">
         {dot && (

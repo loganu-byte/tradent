@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron'
 import { getDb } from '../db'
+import { checkDailyLossLimit } from '../risk'
 import type Database from 'better-sqlite3'
 
 export class TradingAgent {
@@ -17,8 +18,19 @@ export class TradingAgent {
     this.log('info', 'agent', 'Trading agent started')
     this.broadcastStatus()
 
-    // TODO: Initialize AI provider from settings, begin trading loop
-    // this.loopInterval = setInterval(() => this.tick(), 60_000)
+    this.loopInterval = setInterval(() => {
+      const { exceeded, dailyLoss, limit } = checkDailyLossLimit()
+      if (exceeded) {
+        this.log(
+          'warn',
+          'risk',
+          `Daily loss limit $${limit!.toFixed(2)} reached — daily loss: $${dailyLoss.toFixed(2)}. Stopping agent.`
+        )
+        this.stop()
+        return
+      }
+      // TODO: Initialize AI provider from settings, execute trading tick
+    }, 60_000)
   }
 
   async stop(): Promise<void> {

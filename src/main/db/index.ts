@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { join } from 'path'
 import { app } from 'electron'
-import { SCHEMA } from './schema'
+import { SCHEMA, MIGRATIONS } from './schema'
 
 let db: Database.Database
 
@@ -11,6 +11,9 @@ export function initDatabase(): void {
   db.pragma('journal_mode = WAL')
   db.pragma('foreign_keys = ON')
   db.exec(SCHEMA)
+  for (const sql of MIGRATIONS) {
+    try { db.exec(sql) } catch { /* column already exists */ }
+  }
 }
 
 export function getDb(): Database.Database {

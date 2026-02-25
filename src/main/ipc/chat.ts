@@ -1,6 +1,20 @@
 import { ipcMain } from 'electron'
 import { getDb } from '../db'
 
+export function processUserMessage(message: string): {
+  role: 'assistant'
+  content: string
+  timestamp: string
+} {
+  const db = getDb()
+  const insert = db.prepare('INSERT INTO chat_messages (role, content) VALUES (?, ?)')
+  insert.run('user', message)
+  // TODO: Route to active AI provider
+  const response = 'Agent response — configure an AI provider in Settings to enable chat.'
+  insert.run('assistant', response)
+  return { role: 'assistant', content: response, timestamp: new Date().toISOString() }
+}
+
 export function registerChatHandlers(): void {
   ipcMain.handle('chat:history', () => {
     return getDb()
@@ -9,21 +23,7 @@ export function registerChatHandlers(): void {
   })
 
   ipcMain.handle('chat:send', async (_event, message: string) => {
-    const db = getDb()
-    const insert = db.prepare('INSERT INTO chat_messages (role, content) VALUES (?, ?)')
-
-    insert.run('user', message)
-
-    // TODO: Route to active AI provider
-    const response = 'Agent response — configure an AI provider in Settings to enable chat.'
-
-    insert.run('assistant', response)
-
-    return {
-      role: 'assistant' as const,
-      content: response,
-      timestamp: new Date().toISOString()
-    }
+    return processUserMessage(message)
   })
 
   ipcMain.handle('chat:clear', () => {

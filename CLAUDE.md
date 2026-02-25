@@ -84,6 +84,6 @@ src/renderer/src/
 
 ## Phase 1 Scope
 
-Local only — no cloud backend. OANDA demo/live accounts, Gemini AI for trading decisions, live logs, open positions, basic chat.
+Local only — no cloud sync or remote backend. OANDA demo/live accounts, Gemini AI for trading decisions, live logs, open positions, basic chat.
 
-See product vision for full roadmap (Phases 2–6 cover full feature set, open source release, cloud backend, additional brokers, Docker).
+See product vision for full roadmap (Phases 2–6 cover full feature set, open source release, additional brokers, Docker).

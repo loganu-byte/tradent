@@ -1,5 +1,15 @@
 import { create } from 'zustand'
-import type { Theme, LogEntry, Position, ChatMessage, SettingsResponse } from '../types'
+import type {
+  Theme,
+  LogEntry,
+  Position,
+  ChatMessage,
+  SettingsResponse,
+  Agent,
+  TelegramConfig,
+  SecurityStatus,
+  TailscaleConfig
+} from '../types'
 
 interface AppState {
   theme: Theme
@@ -21,6 +31,26 @@ interface AppState {
 
   settings: SettingsResponse | null
   setSettings: (settings: SettingsResponse) => void
+
+  activeProvider: string | null
+  setActiveProvider: (provider: string | null) => void
+
+  activeModel: string | null
+  setActiveModel: (model: string | null) => void
+
+  agents: Agent[]
+  setAgents: (agents: Agent[]) => void
+  upsertAgent: (agent: Agent) => void
+  removeAgent: (id: string) => void
+
+  telegramConfig: TelegramConfig | null
+  setTelegramConfig: (config: TelegramConfig) => void
+
+  securityStatus: SecurityStatus | null
+  setSecurityStatus: (status: SecurityStatus) => void
+
+  tailscaleConfig: TailscaleConfig | null
+  setTailscaleConfig: (config: TailscaleConfig) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -43,5 +73,30 @@ export const useAppStore = create<AppState>((set) => ({
   setAgentRunning: (agentRunning) => set({ agentRunning }),
 
   settings: null,
-  setSettings: (settings) => set({ settings })
+  setSettings: (settings) => set({ settings }),
+
+  activeProvider: null,
+  setActiveProvider: (activeProvider) => set({ activeProvider }),
+
+  activeModel: null,
+  setActiveModel: (activeModel) => set({ activeModel }),
+
+  agents: [],
+  setAgents: (agents) => set({ agents }),
+  upsertAgent: (agent) =>
+    set((state) => ({
+      agents: state.agents.some((a) => a.id === agent.id)
+        ? state.agents.map((a) => (a.id === agent.id ? agent : a))
+        : [...state.agents, agent]
+    })),
+  removeAgent: (id) => set((state) => ({ agents: state.agents.filter((a) => a.id !== id) })),
+
+  telegramConfig: null,
+  setTelegramConfig: (telegramConfig) => set({ telegramConfig }),
+
+  securityStatus: null,
+  setSecurityStatus: (securityStatus) => set({ securityStatus }),
+
+  tailscaleConfig: null,
+  setTailscaleConfig: (tailscaleConfig) => set({ tailscaleConfig })
 }))

@@ -4,7 +4,10 @@ import {
   ScrollText,
   TrendingUp,
   MessageSquare,
-  Settings2
+  Settings2,
+  Cpu,
+  Shield,
+  Send
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -12,10 +15,15 @@ const TOP_NAV = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/logs', icon: ScrollText, label: 'Live Logs' },
   { to: '/positions', icon: TrendingUp, label: 'Open Positions' },
-  { to: '/chat', icon: MessageSquare, label: 'Chat' }
+  { to: '/chat', icon: MessageSquare, label: 'Chat' },
+  { to: '/agents', icon: Cpu, label: 'Agents' }
 ] as const
 
-const BOTTOM_NAV = [{ to: '/settings', icon: Settings2, label: 'Settings' }] as const
+const BOTTOM_NAV = [
+  { to: '/telegram', icon: Send, label: 'Telegram' },
+  { to: '/security', icon: Shield, label: 'Security' },
+  { to: '/settings', icon: Settings2, label: 'Settings' }
+] as const
 
 function NavItem({
   to,
@@ -32,10 +40,8 @@ function NavItem({
       title={label}
       className={({ isActive }) =>
         clsx(
-          'w-9 h-9 flex items-center justify-center rounded-lg transition-colors duration-100',
-          isActive
-            ? 'bg-emerald-500/20 text-emerald-400'
-            : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800'
+          'w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-150',
+          isActive ? 'nav-active' : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800'
         )
       }
     >
