@@ -31,7 +31,7 @@ dist-electron/
 .idea/
 
 # Logs
-logs/
+/logs/
 *.log
 
 # Resources (keep .gitkeep)
